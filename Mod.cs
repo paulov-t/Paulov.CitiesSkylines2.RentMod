@@ -27,8 +27,11 @@ namespace PaulovRentMod
 
             log.Info("Localization source added.");
             log.Info("Registering systems...");
-            updateSystem.UpdateAt<RentIncreaseSystem>(SystemUpdatePhase.GameSimulation);
-            updateSystem.UpdateAt<TaxIncomeReductionSystem>(SystemUpdatePhase.GameSimulation);
+            //updateSystem.UpdateAt<RentIncreaseSystem>(SystemUpdatePhase.GameSimulation);
+            updateSystem.UpdateAt<BalancedRentSystem>(SystemUpdatePhase.GameSimulation);
+            //updateSystem.UpdateAt<TaxIncomeReductionSystem>(SystemUpdatePhase.GameSimulation);          
+            //updateSystem.UpdateAt<PropertyDialogSystem>(SystemUpdatePhase.GameSimulation);
+            updateSystem.UpdateAt<EconomySystem>(SystemUpdatePhase.GameSimulation);
             log.Info("System registration complete.");
 
         }
