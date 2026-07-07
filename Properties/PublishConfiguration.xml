@@ -1,0 +1,33 @@
+<Publish>
+  <ModId Value="" />
+  <DisplayName Value="Paulov's Rent Mod" />
+  <ShortDescription Value="Multiplies residential property rent by a configurable factor." />
+  <LongDescription>
+Paulov's Rent Mod
+
+A simple mod that multiplies residential rent in your city by a configurable multiplier.
+
+Features:
+- Adjustable rent multiplier (1x to 10x, step 0.5)
+- Toggle mod on/off from the options menu
+- Works with existing save games
+
+## How to use
+1. Launch the game and go to Options > Paulov's Rent Mod
+2. Adjust the Rent Multiplier slider
+3. Rent values will be updated the next simulation tick
+  </LongDescription>
+  <Thumbnail Value="Properties/Thumbnail.png" />
+  <Screenshot Value="" />
+  <Tag Value="economy" />
+  <Tag Value="gameplay" />
+  <Tag Value="rent" />
+  <ForumLink Value="" />
+  <ModVersion Value="1.0" />
+  <GameVersion Value="1.0.*" />
+  <Dependency Id="" />
+  <RequiredDLC Value="" />
+  <ChangeLog Value="Initial release" />
+  <ExternalLink Type="github" Url="" />
+  <AccessLevel Value="Public" />
+</Publish>
