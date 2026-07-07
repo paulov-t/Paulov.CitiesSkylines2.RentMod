@@ -6,6 +6,7 @@ using Game.Common;
 using Game.Objects;
 using Game.Prefabs;
 using Game.Simulation;
+using Game.Zones;
 using System;
 using Unity.Collections;
 using Unity.Entities;
@@ -107,6 +108,11 @@ namespace PaulovRentMod.Systems
             foreach (var buildingEntity in buildingEntities)
             {
                 var bpd = EntityManager.GetComponentData<BuildingPropertyData>(buildingEntity);
+                var spawnableData = GetSpawnableBuildingData(buildingEntity);
+
+                EconomyParameterData d = new EconomyParameterData();
+                int r = PropertyUtils.GetRentPricePerRenter(bpd, spawnableData.m_Level, 9, 1000, areaType: (AreaType)(byte)GetZoneType(buildingEntity), ref d, ignoreLandValue: false);
+
                 bpd.m_SpaceMultiplier *= 25f;
                 if (bpd.m_ResidentialProperties > 1)
                     bpd.m_SpaceMultiplier *= 1.25f;
@@ -183,13 +189,33 @@ namespace PaulovRentMod.Systems
 
         private ZoneType GetZoneType(Entity buildingEntity)
         {
-            if (EntityManager.HasComponent<ResidentialProperty>(buildingEntity))
-                return ZoneType.Residential;
-            if (EntityManager.HasComponent<CommercialProperty>(buildingEntity))
-                return ZoneType.Commercial;
-            if (EntityManager.HasComponent<IndustrialProperty>(buildingEntity))
-                return ZoneType.Industrial;
-            return ZoneType.Unknown;
+            var prefabRef = EntityManager.GetComponentData<PrefabRef>(buildingEntity);
+            if (!EntityManager.HasComponent<SpawnableBuildingData>(prefabRef.m_Prefab))
+                return ZoneType.Unknown;
+            var spawnableData = EntityManager.GetComponentData<SpawnableBuildingData>(prefabRef.m_Prefab);
+            if (!EntityManager.HasComponent<ZoneData>(spawnableData.m_ZonePrefab))
+                return ZoneType.Unknown;
+            var zoneData = EntityManager.GetComponentData<ZoneData>(spawnableData.m_ZonePrefab);
+            return zoneData.m_AreaType switch
+            {
+                AreaType.Residential => ZoneType.Residential,
+                AreaType.Commercial => ZoneType.Commercial,
+                AreaType.Industrial => ZoneType.Industrial,
+                _ => ZoneType.Unknown
+            };
+        }
+
+        private SpawnableBuildingData GetSpawnableBuildingData(Entity buildingEntity)
+        {
+            var prefabRef = EntityManager.GetComponentData<PrefabRef>(buildingEntity);
+            if (!EntityManager.HasComponent<SpawnableBuildingData>(prefabRef.m_Prefab))
+                return default(SpawnableBuildingData);
+
+            var spawnableData = EntityManager.GetComponentData<SpawnableBuildingData>(prefabRef.m_Prefab);
+            if (!EntityManager.HasComponent<ZoneData>(spawnableData.m_ZonePrefab))
+                return default(SpawnableBuildingData);
+
+            return spawnableData;
         }
     }
 }
