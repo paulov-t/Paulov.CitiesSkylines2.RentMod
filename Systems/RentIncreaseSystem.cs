@@ -1,10 +1,13 @@
 using Colossal.Logging;
 using Colossal.Serialization.Entities;
 using Game;
+using Game.Buildings;
 using Game.Common;
+using Game.Objects;
 using Game.Prefabs;
 using Game.Simulation;
 using System;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -15,20 +18,35 @@ namespace PaulovRentMod.Systems
         private static ILog log = Mod.log;
 
         private EntityQuery m_EconomyParameterQuery;
+        private EntityQuery m_BuildingPropertyQuery;
+        private EntityQuery m_BuildingQuery;
 
-        private readonly float3 CustomLandValueModifierDefaults = new float3(0.5f, 0.7f, 0.5f);
-
-        private readonly float3 CustomRentPriceBaseDefaults = new float3(1f, 3f, 0.8f);
-
-        private readonly float3 VanillaLandValueModifierDefaults = new float3(0.35f, 0.7f, 0.5f);
-
-        private readonly float3 VanillaRentPriceBaseDefaults = new float3(0.5f, 3f, 0.8f);
+        private int m_UpdateCounter;
+        private const int kUpdateInterval = 512;
+        private bool m_BaseParamsApplied;
 
         protected override void OnCreate()
         {
             base.OnCreate();
             m_EconomyParameterQuery = GetEntityQuery(ComponentType.ReadWrite<EconomyParameterData>());
-            log?.Info("RentIncreaseSystem Created.");
+
+            m_BuildingPropertyQuery = GetEntityQuery(new EntityQueryDesc
+            {
+                All = new[] { ComponentType.ReadWrite<BuildingPropertyData>() },
+                Options = EntityQueryOptions.IncludePrefab
+            });
+
+            m_BuildingQuery = GetEntityQuery(new EntityQueryDesc
+            {
+                All = new[]
+                {
+                    ComponentType.ReadOnly<Transform>(),
+                    ComponentType.ReadOnly<Building>(),
+                },
+                None = new[] { ComponentType.ReadOnly<Deleted>() },
+            });
+
+            log?.Info("RentIncreaseSystem created.");
         }
 
         protected override void OnGameLoadingComplete(Purpose purpose, GameMode mode)
@@ -36,77 +54,142 @@ namespace PaulovRentMod.Systems
             base.OnGameLoadingComplete(purpose, mode);
             if (mode != GameMode.Game || (purpose != Purpose.LoadGame && purpose != Purpose.NewGame))
             {
-                log?.Debug(string.Format("{0}: Not in game mode or not loading/starting a game. Disabling.", nameof(RentIncreaseSystem)));
-                base.Enabled = false;
-                return;
-            }
-          
-            if (m_EconomyParameterQuery.IsEmpty)
-            {
-                log?.Warn("EconomyParameterData not found. Cannot adjust rent parameters. Disabling system.");
-                base.Enabled = false;
+                log?.Debug($"{nameof(RentIncreaseSystem)}: Not in game mode. Disabling.");
+                Enabled = false;
                 return;
             }
 
-            log?.Info("Applying RentIncreaseSystem parameter adjustments...");
-            Entity singletonEntity = m_EconomyParameterQuery.GetSingletonEntity();
-            try
-            {
-                EconomyParameterData economyParams = base.EntityManager.GetComponentData<EconomyParameterData>(singletonEntity);
-                log?.Info($"Initial values read from EconomyParameterData: LandValue={economyParams.m_LandValueModifier}, BaseRent={economyParams.m_RentPriceBuildingZoneTypeBase}");
-                //if (Mod.Settings.UseCustomDefaults)
-                //{
-                //    economyParams.m_LandValueModifier = CustomLandValueModifierDefaults;
-                //    economyParams.m_RentPriceBuildingZoneTypeBase = CustomRentPriceBaseDefaults;
-                //    log?.Info($"Checkbox enabled: Parameters Reset to Custom Defaults: LV={economyParams.m_LandValueModifier}, Base={economyParams.m_RentPriceBuildingZoneTypeBase}");
-                //}
-                //else
-                //{
-                    //economyParams.m_LandValueModifier = VanillaLandValueModifierDefaults;
-                    //economyParams.m_RentPriceBuildingZoneTypeBase = VanillaRentPriceBaseDefaults;
-                //    log?.Info($"Checkbox disabled: Parameters Reset to DEFINED Vanilla Defaults: LV={economyParams.m_LandValueModifier}, Base={economyParams.m_RentPriceBuildingZoneTypeBase}");
-                //}
-                //float landValueFactor = 2f;// Mod.Settings.LandValueRentFactor;
-                //float baseRentFactor = 100f;// Mod.Settings.BaseRentFactor;
-                //log?.Info($"Read Multipliers: LandValueFactor={landValueFactor}, BaseRentFactor={baseRentFactor}");
-                economyParams.m_LandValueModifier = new float3(0.95f, 1.05f, 1f);
-
-                // What I have learnt from decompilation is that the m_RentPriceBuildingZoneTypeBase is a float3 where:
-                // x = Residential, y = Commercial, z = Industrial
-                var residential = 95f; // Mod.Settings.ResidentialRentFactor;
-                var commercial = 100f; // Mod.Settings.CommercialRentFactor;
-                var industrial = 125f; // Mod.Settings.IndustrialRentFactor;
-                economyParams.m_RentPriceBuildingZoneTypeBase = new float3(residential, commercial, industrial);
-
-                // Set the rent percentage for mixed-use buildings to a low value to reduce their rent impact
-                //  Mathf.RoundToInt((float)buildingPropertyData.m_ResidentialProperties / (1f - economyParameterData.m_MixedBuildingCompanyRentPercentage)));
-                // I don't believe that these should be much less than others. I understand the point is that rent in large mixed-use buildings is calculated differently, but I don't think it should be much less than the other types. I will set it to 1% for now, but this may need to be adjusted in the future.
-                economyParams.m_MixedBuildingCompanyRentPercentage = -0.01f;
-
-                // This is based on UK unemployment benefits, which are currently £74.35 per week for those over 25. This is a reasonable value to use in the game, as it is not too high or too low, and it is based on real-world data. The value is multiplied by 7 to get the weekly amount, and then multiplied by the number of updates per day in the simulation to get the final value.
-                // Set the unemployment benefit to a reasonable value based on the current wage system. This is calculated as 75.65 currency units per week, multiplied by 7 days, and then adjusted for the number of updates per day in the simulation.
-                //economyParams.m_UnemploymentBenefit = (int)Math.Round(75.65f * Game.Simulation.PayWageSystem.kUpdatesPerDay);
-                economyParams.m_UnemploymentBenefit = 0; // Set to 0 to disable unemployment benefits
-
-                log?.Info($"Final LandValueModifier Applied: {economyParams.m_LandValueModifier}");
-                log?.Info($"Final RentPriceBuildingZoneTypeBase Applied: {economyParams.m_RentPriceBuildingZoneTypeBase}");
-                base.EntityManager.SetComponentData(singletonEntity, economyParams);
-                log?.Info("Rent parameters adjusted successfully for this session.");
-            }
-            catch (Exception exception)
-            {
-                log?.Error(exception, "Failed to get/set EconomyParameterData in OnGameLoadingComplete!");
-            }
-            finally
-            {
-                base.Enabled = false;
-                log?.Info(string.Format("{0}: disabled after execution.", nameof(RentIncreaseSystem)));
-            }
+            OnUpdate();
         }
 
         protected override void OnUpdate()
         {
+            if (m_EconomyParameterQuery.IsEmpty)
+                return;
+
+            if (!m_BaseParamsApplied)
+            {
+                ApplyBaseParameters();
+                m_BaseParamsApplied = true;
+            }
+
+            if (++m_UpdateCounter < kUpdateInterval)
+                return;
+            m_UpdateCounter = 0;
+
+            UpdateContextAwareLandValue();
+        }
+
+        private void ApplyBaseParameters()
+        {
+            log?.Info("Applying base economy parameters...");
+            var entity = m_EconomyParameterQuery.GetSingletonEntity();
+            var economyParams = EntityManager.GetComponentData<EconomyParameterData>(entity);
+
+            economyParams.m_RentPriceBuildingZoneTypeBase = new float3(105f, 85f, 95f);
+            economyParams.m_MixedBuildingCompanyRentPercentage = 0;
+            economyParams.m_UnemploymentBenefit = 76 * 4;
+            economyParams.m_Pension = 241 * 4;
+
+            EntityManager.SetComponentData(entity, economyParams);
+
+            ApplySpaceMultipliers();
+
+            log?.Info("Base economy parameters applied.");
+        }
+
+        private void ApplySpaceMultipliers()
+        {
+            if (m_BuildingPropertyQuery.IsEmpty)
+                return;
+
+            using var buildingEntities = m_BuildingPropertyQuery.ToEntityArray(Allocator.Temp);
+            foreach (var buildingEntity in buildingEntities)
+            {
+                var bpd = EntityManager.GetComponentData<BuildingPropertyData>(buildingEntity);
+                bpd.m_SpaceMultiplier *= 25f;
+                if (bpd.m_ResidentialProperties > 1)
+                    bpd.m_SpaceMultiplier *= 1.25f;
+                if (bpd.m_ResidentialProperties > 250)
+                    bpd.m_SpaceMultiplier *= 1.15f;
+                if (bpd.m_ResidentialProperties > 500)
+                    bpd.m_SpaceMultiplier *= 1.07f;
+                EntityManager.SetComponentData(buildingEntity, bpd);
+            }
+        }
+
+        private void UpdateContextAwareLandValue()
+        {
+            if (m_BuildingQuery.IsEmpty)
+                return;
+
+            using var entities = m_BuildingQuery.ToEntityArray(Allocator.Temp);
+            using var transforms = m_BuildingQuery.ToComponentDataArray<Transform>(Allocator.Temp);
+
+            float resiAccum = 0f, commAccum = 0f, indusAccum = 0f;
+            int resiCount = 0, commCount = 0, indusCount = 0;
+
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var zoneType = GetZoneType(entities[i]);
+                float3 pos = transforms[i].m_Position;
+                int cellIndex = LandValueSystem.GetCellIndex(pos);
+                float3 cellCenter = LandValueSystem.GetCellCenter(cellIndex);
+                float offset = math.distance(pos, cellCenter);
+
+                switch (zoneType)
+                {
+                    case ZoneType.Residential:
+                        resiAccum += offset;
+                        resiCount++;
+                        break;
+                    case ZoneType.Commercial:
+                        commAccum += offset;
+                        commCount++;
+                        break;
+                    case ZoneType.Industrial:
+                        indusAccum += offset;
+                        indusCount++;
+                        break;
+                }
+            }
+
+            float resiAdj = GetOffsetAdjustment(resiCount, resiAccum);
+            float commAdj = GetOffsetAdjustment(commCount, commAccum);
+            float indusAdj = GetOffsetAdjustment(indusCount, indusAccum);
+
+            var entity = m_EconomyParameterQuery.GetSingletonEntity();
+            var economyParams = EntityManager.GetComponentData<EconomyParameterData>(entity);
+
+            float baseResi = 1.15f, baseComm = 1.1f, baseIndus = 3.5f;
+            economyParams.m_LandValueModifier = new float3(
+                math.clamp(baseResi + resiAdj, 0.85f, 1.45f),
+                math.clamp(baseComm + commAdj, 0.85f, 1.4f),
+                math.clamp(baseIndus + indusAdj, 2.5f, 4.5f)
+            );
+
+            EntityManager.SetComponentData(entity, economyParams);
+        }
+
+        private static float GetOffsetAdjustment(int count, float totalOffset)
+        {
+            if (count < 5)
+                return 0f;
+            float avgOffset = totalOffset / count;
+            return math.clamp((15f - avgOffset) * 0.003f, -0.05f, 0.05f);
+        }
+
+        private enum ZoneType { Unknown, Residential, Commercial, Industrial }
+
+        private ZoneType GetZoneType(Entity buildingEntity)
+        {
+            if (EntityManager.HasComponent<ResidentialProperty>(buildingEntity))
+                return ZoneType.Residential;
+            if (EntityManager.HasComponent<CommercialProperty>(buildingEntity))
+                return ZoneType.Commercial;
+            if (EntityManager.HasComponent<IndustrialProperty>(buildingEntity))
+                return ZoneType.Industrial;
+            return ZoneType.Unknown;
         }
     }
-
 }
