@@ -23,16 +23,15 @@ namespace PaulovRentMod.Systems
         private EntityQuery m_BuildingQuery;
         //private EntityQuery m_PropertyQuery;
         private EntityQuery m_BuildingPropertyQuery;
-        private EntityQuery m_BuildingsNotOnMarketQuery;
         private readonly Dictionary<Entity, int> m_PreviousRent = new();
 
 
         // Tuning values
         private const float VacancyDiscountStrong = 6.0f;
         private const float VacancyDiscountMedium = 6.0f;
-        private const float HighDemandIncrease = 6.0f;
+        private const float HighDemandIncrease = 8.0f;
 
-        private const float IncomeRentLimit = 0.35f;
+        private const float IncomeRentLimit = 0.5f;
 
         // smoothing amount
         private const float RentChangeSpeed = 0.5f;
@@ -65,17 +64,6 @@ namespace PaulovRentMod.Systems
             m_BuildingPropertyQuery = GetEntityQuery(new EntityQueryDesc
             {
                 All = new[] { ComponentType.ReadWrite<BuildingPropertyData>() },
-                Options = EntityQueryOptions.IncludePrefab
-            });
-
-            m_BuildingsNotOnMarketQuery = GetEntityQuery(new EntityQueryDesc
-            {
-                All = new[]
-                {
-                    ComponentType.ReadOnly<Transform>(),
-                    ComponentType.ReadOnly<Building>(),
-                },
-                None = new[] { ComponentType.ReadOnly<PropertyOnMarket>(), ComponentType.ReadOnly<Deleted>() },
                 Options = EntityQueryOptions.IncludePrefab
             });
 
@@ -131,42 +119,50 @@ namespace PaulovRentMod.Systems
                 AdjustBuildingRent(building, em, ref unresolvedBuildings);
             }
 
-            ProcessNotOnMarket();
-        }
-
-        private Dictionary<Entity, float> NotOnMarketChanged = new Dictionary<Entity, float>();
-
-        private void ProcessNotOnMarket()
-        {
-            using var buildingEntities = m_BuildingPropertyQuery.ToEntityArray(Allocator.Temp);
-            foreach (var buildingEntity in buildingEntities)
+            foreach (Entity building in unresolvedBuildings)
             {
-                var bpd = EntityManager.GetComponentData<BuildingPropertyData>(buildingEntity);
-                if (NotOnMarketChanged.ContainsKey(buildingEntity))
+                if (!em.HasComponent<PropertyOnMarket>(building))
                 {
-                    bpd.m_SpaceMultiplier = NotOnMarketChanged[buildingEntity];
+                    em.AddComponent<PropertyOnMarket>(building);
                 }
-                else
-                {
-                    NotOnMarketChanged.TryAdd(buildingEntity, bpd.m_SpaceMultiplier);
-                }
-
-                bpd.m_SpaceMultiplier *= 2f;
-
-                // Additional adjustments based on the number of residential properties
-                if (bpd.m_ResidentialProperties > 1)
-                    bpd.m_SpaceMultiplier *= 2f;
-
-                if (bpd.m_ResidentialProperties > 250)
-                    bpd.m_SpaceMultiplier *= 1.2f;
-
-                if (bpd.m_ResidentialProperties > 500)
-                    bpd.m_SpaceMultiplier *= 1.1f;
-
-                bpd.m_SpaceMultiplier = math.clamp(bpd.m_SpaceMultiplier, 1f, 3f);
-                EntityManager.SetComponentData(buildingEntity, bpd);
             }
+
+            //ProcessNotOnMarket();
         }
+
+        //private Dictionary<Entity, float> NotOnMarketChanged = new Dictionary<Entity, float>();
+
+        //private void ProcessNotOnMarket()
+        //{
+        //    using var buildingEntities = m_BuildingPropertyQuery.ToEntityArray(Allocator.Temp);
+        //    foreach (var buildingEntity in buildingEntities)
+        //    {
+        //        var bpd = EntityManager.GetComponentData<BuildingPropertyData>(buildingEntity);
+        //        if (NotOnMarketChanged.ContainsKey(buildingEntity))
+        //        {
+        //            bpd.m_SpaceMultiplier = NotOnMarketChanged[buildingEntity];
+        //        }
+        //        else
+        //        {
+        //            NotOnMarketChanged.TryAdd(buildingEntity, bpd.m_SpaceMultiplier);
+        //        }
+
+        //        bpd.m_SpaceMultiplier = 2f;
+
+        //        // Additional adjustments based on the number of residential properties
+        //        if (bpd.m_ResidentialProperties > 1)
+        //            bpd.m_SpaceMultiplier *= 2f;
+
+        //        if (bpd.m_ResidentialProperties > 250)
+        //            bpd.m_SpaceMultiplier *= 1.2f;
+
+        //        if (bpd.m_ResidentialProperties > 500)
+        //            bpd.m_SpaceMultiplier *= 1.1f;
+
+        //        bpd.m_SpaceMultiplier = math.clamp(bpd.m_SpaceMultiplier, 1f, 3f);
+        //        EntityManager.SetComponentData(buildingEntity, bpd);
+        //    }
+        //}
 
         private void AdjustBuildingRent(
             Entity building,
@@ -203,7 +199,7 @@ namespace PaulovRentMod.Systems
             // Demand hook
             // Add your demand API here later
             //
-            multiplier *= 6f;
+            multiplier *= 7f;
 
             int targetRent =
                 MathfRound(vanillaRent * multiplier);
@@ -359,7 +355,7 @@ namespace PaulovRentMod.Systems
                     rent,
                     math.max(maxRent, 1)
                     )
-                    , 1000, 3000);
+                    , (76 * 4), 3000);
         }
 
 

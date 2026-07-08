@@ -65,10 +65,10 @@ namespace PaulovRentMod.Systems
             {
                 Entity entity = m_GameModeSettingQuery.GetSingletonEntity();
                 ModeSettingData data = base.EntityManager.GetComponentData<ModeSettingData>(entity);
-                data.m_TaxPaidMultiplier = new float3(0.33f, 0.33f, 0.33f);
-                data.m_SupportPoorCitizens = false;
-                data.m_EnableGovernmentSubsidies = false;
-                data.m_MinimumWealth = 0;
+                //data.m_TaxPaidMultiplier = new float3(0.33f, 0.33f, 0.33f);
+                //data.m_SupportPoorCitizens = false;
+                //data.m_EnableGovernmentSubsidies = false;
+                data.m_MinimumWealth = 800;
                 base.EntityManager.SetComponentData(entity, data);
             }
             catch (System.Exception exception)
