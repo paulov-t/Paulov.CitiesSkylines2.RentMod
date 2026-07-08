@@ -49,9 +49,11 @@ namespace PaulovRentMod.Systems
             var economyParams = EntityManager.GetComponentData<EconomyParameterData>(entity);
 
             var rentPriceBase = economyParams.m_RentPriceBuildingZoneTypeBase;
-            economyParams.m_RentPriceBuildingZoneTypeBase = new float3(rentPriceBase.x * 2, rentPriceBase.x * 2, rentPriceBase.x * 2);
+            economyParams.m_RentPriceBuildingZoneTypeBase = new float3(rentPriceBase.x * 3, rentPriceBase.x * 2, rentPriceBase.x * 2);
             economyParams.m_MixedBuildingCompanyRentPercentage = 0;
+            // UK based unemployment benefit, 76 GBP per week, multiplied by 4 to match the game's time scale (4 weeks per month)
             economyParams.m_UnemploymentBenefit = 76 * 4;
+            // UK based pension, 241 GBP per week, multiplied by 4 to match the game's time scale (4 weeks per month)
             economyParams.m_Pension = 241 * 4;
 
             EntityManager.SetComponentData(entity, economyParams);
