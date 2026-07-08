@@ -131,28 +131,6 @@ namespace PaulovRentMod.Systems
                 AdjustBuildingRent(building, em, ref unresolvedBuildings);
             }
 
-            using var buildingEntities = m_BuildingPropertyQuery.ToEntityArray(Allocator.Temp);
-            foreach (var buildingEntity in buildingEntities)
-            {
-                if (!unresolvedBuildings.Contains(buildingEntity))
-                    continue;
-
-                var bpd = EntityManager.GetComponentData<BuildingPropertyData>(buildingEntity);
-
-                adjustedBuildingsPreChange.TryAdd(buildingEntity.Index, bpd.m_SpaceMultiplier);
-
-                bpd.m_SpaceMultiplier *= 25f;
-                if (bpd.m_ResidentialProperties > 1)
-                    bpd.m_SpaceMultiplier *= 1.25f;
-                if (bpd.m_ResidentialProperties > 250)
-                    bpd.m_SpaceMultiplier *= 1.15f;
-                if (bpd.m_ResidentialProperties > 500)
-                    bpd.m_SpaceMultiplier *= 1.07f;
-
-                EntityManager.SetComponentData(buildingEntity, bpd);
-
-            }
-
             ProcessNotOnMarket();
         }
 
@@ -174,12 +152,16 @@ namespace PaulovRentMod.Systems
                 }
 
                 bpd.m_SpaceMultiplier *= 2f;
+
+                // Additional adjustments based on the number of residential properties
                 if (bpd.m_ResidentialProperties > 1)
-                    bpd.m_SpaceMultiplier *= 1.25f;
+                    bpd.m_SpaceMultiplier *= 2f;
+
                 if (bpd.m_ResidentialProperties > 250)
-                    bpd.m_SpaceMultiplier *= 1.15f;
+                    bpd.m_SpaceMultiplier *= 1.2f;
+
                 if (bpd.m_ResidentialProperties > 500)
-                    bpd.m_SpaceMultiplier *= 1.07f;
+                    bpd.m_SpaceMultiplier *= 1.1f;
 
                 bpd.m_SpaceMultiplier = math.clamp(bpd.m_SpaceMultiplier, 1f, 3f);
                 EntityManager.SetComponentData(buildingEntity, bpd);
