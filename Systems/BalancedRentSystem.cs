@@ -49,14 +49,14 @@ namespace PaulovRentMod.Systems
             {
                 All = new ComponentType[]
                 {
-                    //ComponentType.ReadWrite<PropertyOnMarket>(),
                     ComponentType.ReadOnly<PrefabRef>(),
                     ComponentType.ReadOnly<Building>(),
-                    //ComponentType.ReadOnly<PropertyRenter>()
+                    ComponentType.ReadOnly<ResidentialProperty>(),
                 },
                 Options = EntityQueryOptions.IncludePrefab
             });
 
+         
             //m_PropertyQuery = GetEntityQuery(
             //    ComponentType.ReadOnly<PropertyRenter>()
             //);
@@ -94,6 +94,8 @@ namespace PaulovRentMod.Systems
 
             if (isFirstUpdate)
             {
+                Mod.log?.Info($"Found {entities.Length} buildings using {nameof(m_BuildingQuery)}.");
+
                 foreach (Entity building in entities)
                 {
                     AdjustBuildingRent(building, em, ref unresolvedBuildings);
@@ -127,42 +129,7 @@ namespace PaulovRentMod.Systems
                 }
             }
 
-            //ProcessNotOnMarket();
         }
-
-        //private Dictionary<Entity, float> NotOnMarketChanged = new Dictionary<Entity, float>();
-
-        //private void ProcessNotOnMarket()
-        //{
-        //    using var buildingEntities = m_BuildingPropertyQuery.ToEntityArray(Allocator.Temp);
-        //    foreach (var buildingEntity in buildingEntities)
-        //    {
-        //        var bpd = EntityManager.GetComponentData<BuildingPropertyData>(buildingEntity);
-        //        if (NotOnMarketChanged.ContainsKey(buildingEntity))
-        //        {
-        //            bpd.m_SpaceMultiplier = NotOnMarketChanged[buildingEntity];
-        //        }
-        //        else
-        //        {
-        //            NotOnMarketChanged.TryAdd(buildingEntity, bpd.m_SpaceMultiplier);
-        //        }
-
-        //        bpd.m_SpaceMultiplier = 2f;
-
-        //        // Additional adjustments based on the number of residential properties
-        //        if (bpd.m_ResidentialProperties > 1)
-        //            bpd.m_SpaceMultiplier *= 2f;
-
-        //        if (bpd.m_ResidentialProperties > 250)
-        //            bpd.m_SpaceMultiplier *= 1.2f;
-
-        //        if (bpd.m_ResidentialProperties > 500)
-        //            bpd.m_SpaceMultiplier *= 1.1f;
-
-        //        bpd.m_SpaceMultiplier = math.clamp(bpd.m_SpaceMultiplier, 1f, 3f);
-        //        EntityManager.SetComponentData(buildingEntity, bpd);
-        //    }
-        //}
 
         private void AdjustBuildingRent(
             Entity building,
@@ -170,6 +137,11 @@ namespace PaulovRentMod.Systems
             ref List<Entity> unresolvedBuildings
             )
         {
+            // Only process residential properties
+            if (!IsResidentialOnly(building, em))
+            {
+                return;
+            }
 
             if (!em.HasComponent<PropertyOnMarket>(building))
             {
@@ -240,6 +212,28 @@ namespace PaulovRentMod.Systems
                 building,
                 finalRent,
                 em);
+        }
+
+        private bool IsResidentialOnly(Entity building, EntityManager em)
+        {
+            return true;
+            //if (!em.HasComponent<PrefabRef>(building))
+            //    return false;
+
+            //Entity prefab = em.GetComponentData<PrefabRef>(building).m_Prefab;
+
+            //if (!em.HasComponent<BuildingPropertyData>(prefab))
+            //    return false;
+
+            //BuildingPropertyData data = em.GetComponentData<BuildingPropertyData>(prefab);
+
+            //// Check if building has residential properties and no other property types
+            //return data.m_ResidentialProperties > 0 
+            //    //&& 
+            //    //   data.m_CommercialProperties == 0 && 
+            //    //   data.m_IndustrialProperties == 0 && 
+            //    //   data.m_OfficeProperties == 0
+            //       ;
         }
 
         private float GetVacancyModifier(
