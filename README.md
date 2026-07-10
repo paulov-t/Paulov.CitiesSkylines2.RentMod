@@ -42,17 +42,6 @@ dotnet build
 
 Launch the game. The mod will appear in the **Mods** menu. Enable it and adjust settings under **Options → Paulov's Rent Mod**.
 
-## Configuration
-
-Settings are available directly in the in-game Options UI:
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| ModEnabled | Enable or disable the rent multiplier | true |
-| RentMultiplier | Rent multiplier (1.0–10.0, step 0.5) | 2.0 |
-
-Settings are persisted automatically via the game's settings system.
-
 ## Project Structure
 
 ```
@@ -85,8 +74,7 @@ The `RentIncreaseSystem` is a scaffold. To actually modify rent:
 
 1. Load a save with residential buildings
 2. Open the economy panel to see base rent values
-3. Go to **Options → Paulov's Rent Mod**, confirm `ModEnabled = ON` and `RentMultiplier > 1`
-4. Check that displayed rent values have increased
+3. Check that displayed rent values have increased
 
 ### Logging
 

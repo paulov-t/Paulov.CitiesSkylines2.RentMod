@@ -1,21 +1,20 @@
 <Publish>
   <ModId Value="" />
   <DisplayName Value="Paulov's Rent Mod" />
-  <ShortDescription Value="Multiplies residential property rent by a configurable factor." />
+  <ShortDescription Value="Fixes Residential Rent so thats its more realistic" />
   <LongDescription>
-Paulov's Rent Mod
+	  Paulov's Rent Mod
 
-A simple mod that multiplies residential rent in your city by a configurable multiplier.
+	  A simple mod that ensures that all Residential Rent is significantly increased so that there is no more 0-6c rent.
 
-Features:
-- Adjustable rent multiplier (1x to 10x, step 0.5)
-- Toggle mod on/off from the options menu
-- Works with existing save games
+	  Features:
+	  - The first release ensures that all Residential Rent is significantly increased so that there is no more 0-6c rent and more akin to real life
+	  - Works with existing save games
 
-## How to use
-1. Launch the game and go to Options > Paulov's Rent Mod
-2. Adjust the Rent Multiplier slider
-3. Rent values will be updated the next simulation tick
+	  ## How to use
+	  1. Launch the game
+	  2. Apply the mod
+	  3. Rent values will be updated the next simulation tick
   </LongDescription>
   <Thumbnail Value="Properties/Thumbnail.png" />
   <Screenshot Value="" />
@@ -28,6 +27,6 @@ Features:
   <Dependency Id="" />
   <RequiredDLC Value="" />
   <ChangeLog Value="Initial release" />
-  <ExternalLink Type="github" Url="" />
+  <ExternalLink Type="github" Url="https://github.com/paulov-t/Paulov.CitiesSkylines2.RentMod" />
   <AccessLevel Value="Public" />
 </Publish>
