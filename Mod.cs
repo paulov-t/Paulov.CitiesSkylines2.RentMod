@@ -11,6 +11,7 @@ namespace PaulovRentMod
     {
         public static ILog log = LogManager.GetLogger($"{nameof(PaulovRentMod)}.{nameof(Mod)}").SetShowsErrorsInUI(false);
         private Setting m_Setting;
+        public static Setting Settings { get; private set; }
 
         public void OnLoad(UpdateSystem updateSystem)
         {
@@ -22,15 +23,12 @@ namespace PaulovRentMod
             m_Setting = new Setting(this);
             m_Setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
-
             AssetDatabase.global.LoadSettings(nameof(PaulovRentMod), m_Setting, new Setting(this));
+            Settings = m_Setting;
 
             log.Info("Localization source added.");
             log.Info("Registering systems...");
-            //updateSystem.UpdateAt<RentIncreaseSystem>(SystemUpdatePhase.GameSimulation);
             updateSystem.UpdateAt<BalancedRentSystem>(SystemUpdatePhase.GameSimulation);
-            updateSystem.UpdateAt<TaxIncomeReductionSystem>(SystemUpdatePhase.GameSimulation);          
-            //updateSystem.UpdateAt<PropertyDialogSystem>(SystemUpdatePhase.GameSimulation);
             updateSystem.UpdateAt<EconomySystem>(SystemUpdatePhase.GameSimulation);
             log.Info("System registration complete.");
 

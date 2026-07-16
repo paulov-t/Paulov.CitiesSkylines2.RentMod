@@ -121,6 +121,7 @@ namespace PaulovRentMod.Systems
                 AdjustBuildingRent(building, em, ref unresolvedBuildings);
             }
 
+            // The easiest way to resolve the buildings that havent been fixed is by adding a PropertyOnMarket component (that is auto removed by the game after)
             foreach (Entity building in unresolvedBuildings)
             {
                 if (!em.HasComponent<PropertyOnMarket>(building))
@@ -158,7 +159,8 @@ namespace PaulovRentMod.Systems
             if (vanillaRent <= 0)
                 return;
 
-            float multiplier = 6f;
+
+            float multiplier = 5f * (Mod.Settings?.RentMultiplier ?? 1.0f);
 
             //
             // Vacancy adjustment

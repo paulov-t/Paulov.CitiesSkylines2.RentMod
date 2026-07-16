@@ -24,19 +24,14 @@ namespace PaulovRentMod
         [SettingsUISection(kSection, kToggleGroup)]
         public bool ModEnabled { get; set; } = true;
 
-        [SettingsUISection(kSection, kToggleGroup)]
-        public bool DisableUnemploymentBenefits { get; set; } = false;
-
-        //[SettingsUISlider(min = 1, max = 10, step = 0.5f, scalarMultiplier = 1, unit = Unit.kInteger)]
-        //[SettingsUISection(kSection, kSliderGroup)]
-        //public float RentMultiplier { get; set; } = 2.0f;
-
-
+        [SettingsUISlider(min = 0.1f, max = 10, step = 0.1f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction)]
+        [SettingsUISection(kSection, kSliderGroup)]
+        public float RentMultiplier { get; set; } = 1.0f;
 
         public override void SetDefaults()
         {
             ModEnabled = true;
-            //RentMultiplier = 2.0f;
+            RentMultiplier = 1.0f;
         }
     }
 
@@ -59,10 +54,10 @@ namespace PaulovRentMod
                 { m_Setting.GetOptionGroupLocaleID(Setting.kSliderGroup), "Multiplier" },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ModEnabled)), "Enable Rent Mod" },
-                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ModEnabled)), "Enables or disables the rent multiplier." },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ModEnabled)), "Enables or disables the rent mod." },
 
-                //{ m_Setting.GetOptionLabelLocaleID(nameof(Setting.RentMultiplier)), "Rent Multiplier" },
-                //{ m_Setting.GetOptionDescLocaleID(nameof(Setting.RentMultiplier)), "Multiplier applied to all residential rent. 1.0 = default, 2.0 = double." },
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.RentMultiplier)), "Rent Multiplier" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.RentMultiplier)), "Multiplier on top of the system applied. 1.0 = default, 2.0 = double." },
             };
         }
 

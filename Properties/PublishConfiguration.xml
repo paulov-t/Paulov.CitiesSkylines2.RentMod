@@ -1,9 +1,9 @@
 <Publish>
-  <ModId Value="" />
+  <ModId Value="151219" />
   <DisplayName Value="Paulov's Rent Mod" />
   <ShortDescription Value="Fixes Residential Rent so thats its more realistic" />
   <LongDescription>
-	  Paulov's Rent Mod
+	  ## Paulov's Rent Mod
 
 	  A simple mod that ensures that all Residential Rent is significantly increased so that there is no more 0-6c rent.
 
@@ -18,15 +18,13 @@
   </LongDescription>
   <Thumbnail Value="Properties/Thumbnail.png" />
   <Screenshot Value="" />
-  <Tag Value="economy" />
-  <Tag Value="gameplay" />
-  <Tag Value="rent" />
+  <Tag Value="Code Mod" />
   <ForumLink Value="" />
-  <ModVersion Value="1.0" />
-  <GameVersion Value="1.0.*" />
+  <ModVersion Value="1.2" />
+  <GameVersion Value="1.6.*" />
   <Dependency Id="" />
   <RequiredDLC Value="" />
-  <ChangeLog Value="Initial release" />
+  <ChangeLog Value="Mod settings fixes" />
   <ExternalLink Type="github" Url="https://github.com/paulov-t/Paulov.CitiesSkylines2.RentMod" />
   <AccessLevel Value="Public" />
 </Publish>
