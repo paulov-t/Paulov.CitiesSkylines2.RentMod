@@ -4,6 +4,20 @@ A [Cities: Skylines 2](https://paradoxplaza.com/cities-skylines-2) code mod that
 
 Built with the official [CS2 Modding Toolchain](https://cs2.paradoxwikis.com/Modding_Toolchain).
 
+<div align="center">
+
+  ![TotalDownloads][downloads-total-shield]
+  ![LatestDownloads][downloads-latest-shield]
+  ![Release][release-shield]
+
+</div>
+
+[downloads-total-shield]: https://img.shields.io/github/downloads/paulov-t/Paulov.CitiesSkylines2.RentMod/total?style=for-the-badge
+
+[downloads-latest-shield]: https://img.shields.io/github/downloads/paulov-t/Paulov.CitiesSkylines2.RentMod/latest/total?style=for-the-badge
+
+[release-shield]: https://img.shields.io/github/v/release/paulov-t/Paulov.CitiesSkylines2.RentMod?style=for-the-badge
+
 ## Requirements
 
 - [Cities: Skylines 2](https://store.steampowered.com/app/949230/Cities_Skylines_II/) (Steam or Game Pass)
